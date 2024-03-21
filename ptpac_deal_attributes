@@ -6,7 +6,7 @@ This function does some nice things
 
 Create if not exists a Woocommerce attribute($name), fills it with options( array of terms, uppercase, spaces, etc.) and returns the attribute object for variable product
 For variations you must combine array taxonomy / terms
-TODO: return all possible combination as array to iterate as product variations
+TODO: return all possible combination as array to iterate as product variations when using an API or some logic for product variation creation.
 
 @$args array is for attribute creation as: https://woocommerce.github.io/code-reference/namespaces/default.html#function_wc_create_attribute
 
