@@ -1,0 +1,88 @@
+/*
+
+Function to create taxonomy and terms on the fly
+
+This function does some nice things
+
+Create if not exists a Woocommerce attribute($name), fills it with options( array of terms, uppercase, spaces, etc.) and returns the attribute object for variable product
+For variations you must combine array taxonomy / terms
+TODO: return all possible combination as array to iterate as product variations
+
+@$args array is for attribute creation as: https://woocommerce.github.io/code-reference/namespaces/default.html#function_wc_create_attribute
+
+*/
+
+function ptpac_deal_attributes($name, $args = array(), $options = array(), $variation = false)
+	{
+
+		if (wc_check_if_attribute_name_is_reserved(wc_strtolower($name))) {
+			$name = 'ptpac_' . $name;
+		}
+
+		$pa = wc_attribute_taxonomy_name(wc_sanitize_taxonomy_name($name));
+
+		$args = array_merge(
+			$args,
+			array(
+				'name' => $name
+			)
+		);
+
+		//TAX
+		if (!taxonomy_exists($pa)) {
+
+			$tax_id = wc_create_attribute($args);
+
+      register_taxonomy(
+				$pa,
+				apply_filters(
+					'woocommerce_taxonomy_objects_' . $pa,
+					array(
+						'product'
+					)
+				),
+				apply_filters(
+					'woocommerce_taxonomy_args_' . $pa,
+					array(
+						'labels' => array('name' => $name),
+						'public' => true,
+						'query_var' => true
+					)
+				)
+			);
+
+			delete_transient('wc_attribute_taxonomies');
+
+		} else {
+
+			$tax_id = wc_attribute_taxonomy_id_by_name($pa);
+
+		}
+
+		//TERMS
+		foreach ($options as $option) {
+
+			if (!term_exists($option, $pa)) {
+
+				$term = wp_insert_term($option, $pa);
+
+				if (is_wp_error($term)) {
+
+					continue;
+
+				}
+
+			}
+
+		}
+
+		$attribute = new WC_Product_Attribute();
+		$attribute->set_id($tax_id);
+		$attribute->set_name($pa);
+		$attribute->set_options($options);
+		$attribute->set_visible(true);
+		$attribute->set_variation($variation ? 1 : 0);
+
+		return $attribute;
+
+}
